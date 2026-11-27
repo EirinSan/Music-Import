@@ -1,0 +1,20 @@
+[
+  {
+    "guid": "91b47a12-5d3e-4c8f-a72e-681f0c4d9e21",
+    "name": "DoujinStyle Importer",
+    "description": "Recherche automatiquement des albums sur doujinstyle.com depuis Jellyfin/Finamp/Symfonium et les telecharge + extrait dans votre mediatheque Musique.",
+    "overview": "Import automatique d'albums DoujinStyle depuis la recherche Jellyfin",
+    "owner": "EirinSan",
+    "category": "Music",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release for Jellyfin 12.x (.NET 10).",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/EirinSan/Music-Import/releases/latest/download/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip",
+        "checksum": "f2aae2530cfbfba9d51f6363e42d56ef",
+        "timestamp": "2026-11-27T14:13:35Z"
+      }
+    ]
+  }
+]

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <title>DoujinStyle Importer</title>
+</head>
+<body>
+<div id="DoujinStyleConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
+    <div data-role="content">
+        <div class="content-primary">
+            <div class="verticalSection">
+                <div class="sectionTitleContainer flex align-items-center">
+                    <h2 class="sectionTitle">DoujinStyle Importer</h2>
+                </div>
+                <p style="opacity:0.85;">
+                    Recherche automatiquement des albums sur <strong>doujinstyle.com</strong> depuis vos applications Jellyfin (Web, Mobile, Finamp, Symfonium) et télécharge + extrait les archives directement dans votre médiathèque Musique.
+                </p>
+                <div id="dsWarningBanner" style="display:none; padding:12px 16px; margin-bottom:16px; border-radius:6px; background:rgba(239,68,68,0.18); border:1px solid #ef4444; color:#fecaca;"></div>
+                <div id="dsDetectedFolderBanner" style="padding:10px 14px; margin-bottom:16px; border-radius:6px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4);">
+                    <strong>Dossier Musique actif :</strong> <span id="dsEffectiveFolder">Chargement...</span>
+                </div>
+            </div>
+
+            <form id="DoujinStyleConfigForm">
+                <div class="verticalSection">
+                    <h3 class="sectionTitle">Recherche &amp; Déclenchement</h3>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnableSearchInjection" type="checkbox" is="emby-checkbox" />
+                            <span>Injecter les résultats DoujinStyle dans la recherche Jellyfin</span>
+                        </label>
+                        <div class="fieldDescription">Affiche les albums <code>[DoujinStyle]</code> lorsque vous cherchez un artiste ou un album dans votre app Jellyfin / Finamp / Symfonium.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxSearchResults">Nombre maximum de résultats DoujinStyle par recherche</label>
+                        <input id="MaxSearchResults" type="number" min="1" max="50" is="emby-input" />
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="OnlyFlac" type="checkbox" is="emby-checkbox" />
+                            <span>Rechercher uniquement les albums FLAC sur DoujinStyle</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="DownloadOnFavorite" type="checkbox" is="emby-checkbox" />
+                            <span>Télécharger quand j'ajoute l'album ou la piste en Favori (♥)</span>
+                        </label>
+                        <div class="fieldDescription">Recommandé sur Finamp, Symfonium et Jellyfin Mobile : appuyez sur le cœur ♥ pour lancer l'importation.</div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="DownloadOnPlay" type="checkbox" is="emby-checkbox" />
+                            <span>Télécharger quand je lance la lecture (▶) d'un album DoujinStyle</span>
+                        </label>
+                        <div class="fieldDescription">Joue un court carillon de confirmation tout en lançant le téléchargement et l'extraction en arrière-plan.</div>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="AutoDownloadOnOpen" type="checkbox" is="emby-checkbox" />
+                            <span>Télécharger automatiquement dès l'ouverture de la fiche d'un album DoujinStyle</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="verticalSection">
+                    <h3 class="sectionTitle">Stockage &amp; Métadonnées</h3>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="TargetMusicDirectory">Dossier Musique cible (laisser vide = détection auto)</label>
+                        <input id="TargetMusicDirectory" type="text" is="emby-input" placeholder="Ex: /home/ryo/media/Music (auto-détecté si vide)" />
+                        <div class="fieldDescription">Les albums seront extraits proprement dans <code>{Dossier}/{Artiste}/{Album}/</code> suivis d'un scan Jellyfin automatique.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxArchiveSizeMb">Taille maximale par archive (Mo)</label>
+                        <input id="MaxArchiveSizeMb" type="number" min="50" max="16384" is="emby-input" />
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="WriteMissingAudioTags" type="checkbox" is="emby-checkbox" />
+                            <span>Compléter automatiquement les tags audio manquants (Album, Artiste, Genres) et cover.jpg</span>
+                        </label>
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="SendSessionNotification" type="checkbox" is="emby-checkbox" />
+                            <span>Afficher une notification Jellyfin au lancement et à la fin du téléchargement</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="verticalSection">
+                    <h3 class="sectionTitle">Connexion &amp; Bridge Optionnel</h3>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="DoujinStyleBaseUrl">URL DoujinStyle</label>
+                        <input id="DoujinStyleBaseUrl" type="text" is="emby-input" />
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="BridgeUrl">URL du Bridge résidentiel optionnel (si l'IP seedbox Ultra.cc est filtrée par anti-bot)</label>
+                        <input id="BridgeUrl" type="text" is="emby-input" placeholder="Optionnel : https://mon-bridge.exemple.com" />
+                        <div class="fieldDescription">Laissez vide pour que Jellyfin contacte DoujinStyle directement.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="BridgeApiKey">Clé API du Bridge (optionnel)</label>
+                        <input id="BridgeApiKey" type="password" is="emby-input" />
+                    </div>
+
+                    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px;">
+                        <button is="emby-button" type="submit" class="raised button-submit">
+                            <span>Enregistrer la configuration</span>
+                        </button>
+                        <button is="emby-button" type="button" id="btnTestDoujinStyle" class="raised">
+                            <span>Tester la connexion à DoujinStyle</span>
+                        </button>
+                    </div>
+                    <div id="dsTestResult" style="margin-top:12px; font-weight:500;"></div>
+                </div>
+            </form>
+
+            <hr style="opacity:0.2; margin:28px 0;" />
+
+            <div class="verticalSection">
+                <h3 class="sectionTitle">Recherche &amp; Téléchargement Direct</h3>
+                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:240px;">
+                        <label class="inputLabel inputLabelUnfocused" for="dsQuickSearchInput">Rechercher un artiste/album ou coller un ID DoujinStyle</label>
+                        <input id="dsQuickSearchInput" type="text" is="emby-input" placeholder="Ex: FELT, Camellia, ShibayanRecords, 22816..." />
+                    </div>
+                    <button is="emby-button" type="button" id="btnQuickSearch" class="raised button-submit">
+                        <span>Rechercher</span>
+                    </button>
+                </div>
+                <div id="dsSearchResults" style="margin-top:16px; display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;"></div>
+            </div>
+
+            <div class="verticalSection" style="margin-top:28px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 class="sectionTitle">File d'attente des téléchargements</h3>
+                    <button is="emby-button" type="button" id="btnRefreshJobs" class="raised">
+                        <span>Actualiser</span>
+                    </button>
+                </div>
+                <div id="dsJobsContainer" style="margin-top:10px;">Aucun téléchargement récent.</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var pluginId = '91b47a12-5d3e-4c8f-a72e-681f0c4d9e21';
+            var pollTimer = null;
+
+            function escapeHtml(str) {
+                var div = document.createElement('div');
+                div.textContent = str || '';
+                return div.innerHTML;
+            }
+
+            function apiFetchJson(path, options) {
+                var opts = options || {};
+                opts.headers = Object.assign({
+                    'X-Emby-Authorization': ApiClient.getAuthorizationHeader ? ApiClient.getAuthorizationHeader() : undefined,
+                    'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
+                }, opts.headers || {});
+                return fetch(ApiClient.getUrl(path), opts).then(function (r) { return r.json(); });
+            }
+
+            function loadStatusAndJobs() {
+                apiFetchJson('DoujinStyle/Status').then(function (data) {
+                    var folderEl = document.getElementById('dsEffectiveFolder');
+                    if (data.EffectiveTargetDirectory) {
+                        folderEl.textContent = data.EffectiveTargetDirectory;
+                    } else {
+                        folderEl.textContent = 'Non détecté (créez une médiathèque Musique dans Jellyfin ou indiquez un chemin ci-dessous)';
+                    }
+
+                    var warnEl = document.getElementById('dsWarningBanner');
+                    if (data.LastWarning) {
+                        warnEl.style.display = 'block';
+                        warnEl.textContent = data.LastWarning;
+                    } else {
+                        warnEl.style.display = 'none';
+                    }
+
+                    renderJobs(data.Jobs || []);
+                }).catch(function () {});
+            }
+
+            function renderJobs(jobs) {
+                var container = document.getElementById('dsJobsContainer');
+                if (!jobs || jobs.length === 0) {
+                    container.innerHTML = '<p style="opacity:0.7;">Aucun téléchargement récent.</p>';
+                    return;
+                }
+
+                container.innerHTML = jobs.map(function (j) {
+                    var pct = j.ProgressPercent || 0;
+                    var color = j.Status === 5 || j.Status === 'Completed' ? '#22c55e'
+                        : (j.Status === 6 || j.Status === 'Failed' ? '#ef4444' : '#a855f7');
+                    return '<div style="padding:12px; margin-bottom:8px; border-radius:6px; background:rgba(255,255,255,0.05);">' +
+                        '<div style="display:flex; justify-content:space-between; gap:8px;">' +
+                            '<strong>' + escapeHtml(j.Artist + ' — ' + j.AlbumTitle) + '</strong>' +
+                            '<span>' + pct + '%</span>' +
+                        '</div>' +
+                        '<div style="font-size:0.9em; opacity:0.85; margin-top:4px;">' + escapeHtml(j.StatusMessage || '') + '</div>' +
+                        '<div style="height:6px; background:rgba(255,255,255,0.1); border-radius:3px; margin-top:8px; overflow:hidden;">' +
+                            '<div style="height:100%; width:' + pct + '%; background:' + color + '; transition:width 0.3s;"></div>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+            }
+
+            window.dsTriggerDownload = function (albumId) {
+                Dashboard.showLoadingMsg();
+                apiFetchJson('DoujinStyle/Download/' + encodeURIComponent(albumId), { method: 'POST' })
+                    .then(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Téléchargement ajouté à la file d\'attente !');
+                        loadStatusAndJobs();
+                    })
+                    .catch(function (err) {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Erreur : ' + err);
+                    });
+            };
+
+            document.getElementById('DoujinStyleConfigPage').addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (cfg) {
+                    document.getElementById('EnableSearchInjection').checked = cfg.EnableSearchInjection;
+                    document.getElementById('MaxSearchResults').value = cfg.MaxSearchResults || 12;
+                    document.getElementById('OnlyFlac').checked = cfg.OnlyFlac;
+                    document.getElementById('DownloadOnFavorite').checked = cfg.DownloadOnFavorite;
+                    document.getElementById('DownloadOnPlay').checked = cfg.DownloadOnPlay;
+                    document.getElementById('AutoDownloadOnOpen').checked = cfg.AutoDownloadOnOpen;
+                    document.getElementById('TargetMusicDirectory').value = cfg.TargetMusicDirectory || '';
+                    document.getElementById('MaxArchiveSizeMb').value = cfg.MaxArchiveSizeMb || 2048;
+                    document.getElementById('WriteMissingAudioTags').checked = cfg.WriteMissingAudioTags;
+                    document.getElementById('SendSessionNotification').checked = cfg.SendSessionNotification;
+                    document.getElementById('DoujinStyleBaseUrl').value = cfg.DoujinStyleBaseUrl || 'https://doujinstyle.com';
+                    document.getElementById('BridgeUrl').value = cfg.BridgeUrl || '';
+                    document.getElementById('BridgeApiKey').value = cfg.BridgeApiKey || '';
+                    Dashboard.hideLoadingMsg();
+                });
+
+                loadStatusAndJobs();
+                if (pollTimer) clearInterval(pollTimer);
+                pollTimer = setInterval(loadStatusAndJobs, 4000);
+            });
+
+            document.getElementById('DoujinStyleConfigPage').addEventListener('pagehide', function () {
+                if (pollTimer) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+            });
+
+            document.getElementById('DoujinStyleConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(pluginId).then(function (cfg) {
+                    cfg.EnableSearchInjection = document.getElementById('EnableSearchInjection').checked;
+                    cfg.MaxSearchResults = parseInt(document.getElementById('MaxSearchResults').value, 10) || 12;
+                    cfg.OnlyFlac = document.getElementById('OnlyFlac').checked;
+                    cfg.DownloadOnFavorite = document.getElementById('DownloadOnFavorite').checked;
+                    cfg.DownloadOnPlay = document.getElementById('DownloadOnPlay').checked;
+                    cfg.AutoDownloadOnOpen = document.getElementById('AutoDownloadOnOpen').checked;
+                    cfg.TargetMusicDirectory = document.getElementById('TargetMusicDirectory').value.trim();
+                    cfg.MaxArchiveSizeMb = parseInt(document.getElementById('MaxArchiveSizeMb').value, 10) || 2048;
+                    cfg.WriteMissingAudioTags = document.getElementById('WriteMissingAudioTags').checked;
+                    cfg.SendSessionNotification = document.getElementById('SendSessionNotification').checked;
+                    cfg.DoujinStyleBaseUrl = document.getElementById('DoujinStyleBaseUrl').value.trim() || 'https://doujinstyle.com';
+                    cfg.BridgeUrl = document.getElementById('BridgeUrl').value.trim();
+                    cfg.BridgeApiKey = document.getElementById('BridgeApiKey').value.trim();
+
+                    ApiClient.updatePluginConfiguration(pluginId, cfg).then(function (res) {
+                        Dashboard.processPluginConfigurationUpdateResult(res);
+                        loadStatusAndJobs();
+                    });
+                });
+                return false;
+            });
+
+            document.getElementById('btnTestDoujinStyle').addEventListener('click', function () {
+                var out = document.getElementById('dsTestResult');
+                out.textContent = 'Test en cours...';
+                out.style.color = '#cbd5e1';
+                apiFetchJson('DoujinStyle/TestConnection').then(function (res) {
+                    out.textContent = res.Message || '';
+                    out.style.color = res.Success ? '#4ade80' : '#f87171';
+                    loadStatusAndJobs();
+                }).catch(function (err) {
+                    out.textContent = 'Erreur : ' + err;
+                    out.style.color = '#f87171';
+                });
+            });
+
+            document.getElementById('btnRefreshJobs').addEventListener('click', loadStatusAndJobs);
+
+            document.getElementById('btnQuickSearch').addEventListener('click', function () {
+                var q = document.getElementById('dsQuickSearchInput').value.trim();
+                if (!q) return;
+                if (/^\d+$/.test(q) || q.indexOf('id=') !== -1) {
+                    window.dsTriggerDownload(q);
+                    return;
+                }
+                var grid = document.getElementById('dsSearchResults');
+                grid.innerHTML = '<p>Recherche sur DoujinStyle...</p>';
+                apiFetchJson('DoujinStyle/Search?query=' + encodeURIComponent(q)).then(function (res) {
+                    if (!res.Success) {
+                        grid.innerHTML = '<p style="color:#f87171;">' + escapeHtml(res.Error || 'Erreur') + '</p>';
+                        return;
+                    }
+                    if (!res.Items || res.Items.length === 0) {
+                        grid.innerHTML = '<p>Aucun résultat trouvé.</p>';
+                        return;
+                    }
+                    grid.innerHTML = res.Items.map(function (item) {
+                        var tags = (item.Tags || []).slice(0, 4).join(', ');
+                        return '<div style="padding:12px; border-radius:8px; background:rgba(255,255,255,0.06); display:flex; flex-direction:column; justify-content:space-between; gap:10px;">' +
+                            '<div>' +
+                                '<div style="font-weight:bold; font-size:1.05em;">' + escapeHtml(item.Title) + '</div>' +
+                                '<div style="opacity:0.85; margin-top:2px;">' + escapeHtml(item.Artist) + '</div>' +
+                                (tags ? '<div style="font-size:0.8em; opacity:0.65; margin-top:4px;">' + escapeHtml(tags) + '</div>' : '') +
+                            '</div>' +
+                            '<button is="emby-button" type="button" class="raised button-submit" onclick="window.dsTriggerDownload(\'' + escapeHtml(item.Id) + '\')">' +
+                                '<span>⬇ Télécharger dans Jellyfin</span>' +
+                            '</button>' +
+                        '</div>';
+                    }).join('');
+                });
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

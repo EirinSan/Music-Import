@@ -1,0 +1,14 @@
+{
+  "category": "Music",
+  "changelog": "Initial release: DoujinStyle search injection, MediaFire/GDrive/Mega downloaders, SharpCompress extraction, and automatic Jellyfin library scan.",
+  "description": "Recherche automatiquement des albums sur doujinstyle.com depuis vos applications Jellyfin (Web, Android/iOS, Finamp, Symfonium) et les telecharge + extrait dans votre mediatheque Musique.",
+  "guid": "91b47a12-5d3e-4c8f-a72e-681f0c4d9e21",
+  "name": "DoujinStyle Importer",
+  "overview": "Import automatique d'albums DoujinStyle depuis la recherche Jellyfin",
+  "owner": "EirinSan",
+  "targetAbi": "12.0.0.0",
+  "timestamp": "2026-11-27T14:13:35Z",
+  "version": "1.0.0.0",
+  "status": "Active",
+  "autoUpdate": true
+}
