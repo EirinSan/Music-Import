@@ -47,6 +47,12 @@ public static class DoujinGuidCodec
     private const ushort KindAlbumNumeric = 0xA1B0;
     private const ushort KindTrackNumeric = 0x7AC0;
     private const ushort KindArtistHash = 0xA271;
+    private const ushort KindPlaylistNumeric = 0xCA70;
+
+    public static Guid EncodePlaylist(ushort feedIndex)
+    {
+        return BuildNumericGuid(KindPlaylistNumeric, feedIndex, feedIndex);
+    }
 
     public static Guid EncodeAlbum(string doujinId)
     {
@@ -107,13 +113,20 @@ public static class DoujinGuidCodec
             return true;
         }
 
+        ushort rawTrack = BinaryPrimitives.ReadUInt16LittleEndian(bytes.Slice(6, 2));
+        trackIndex = (ushort)(rawTrack & 0x0FFF);
+
+        if (marker == KindPlaylistNumeric)
+        {
+            kind = DoujinStubKind.Playlist;
+            numericAlbumId = trackIndex.ToString(CultureInfo.InvariantCulture);
+            return true;
+        }
+
         if (marker != KindAlbumNumeric && marker != KindTrackNumeric)
         {
             return false;
         }
-
-        ushort rawTrack = BinaryPrimitives.ReadUInt16LittleEndian(bytes.Slice(6, 2));
-        trackIndex = (ushort)(rawTrack & 0x0FFF);
 
         ulong id = ((ulong)bytes[10] << 40)
             | ((ulong)bytes[11] << 32)
@@ -162,5 +175,6 @@ public enum DoujinStubKind
     None = 0,
     Album = 1,
     Track = 2,
-    Artist = 3
+    Artist = 3,
+    Playlist = 4
 }

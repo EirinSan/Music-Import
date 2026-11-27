@@ -216,12 +216,31 @@ public sealed class DoujinStyleItemActionFilter : IAsyncActionFilter
             }
         }
 
-        // 7. Album children / tracklist: GET /Items?ParentId={stub} or albumIds={stub}
+        // 6b. Playlist items route: GET /Playlists/{playlistId}/Items
+        if (path.Contains("/Playlists/", StringComparison.OrdinalIgnoreCase)
+            && path.EndsWith("/Items", StringComparison.OrdinalIgnoreCase)
+            && TryExtractGuidFromRouteOrPath(ctx, path, out var plRouteGuid)
+            && _stubCache.TryGetByGuid(plRouteGuid, out var plRouteKind, out _, out var plFeedIdx, out _)
+            && plRouteKind == DoujinStubKind.Playlist)
+        {
+            var qr = await BuildPlaylistItemsQueryResultAsync(plFeedIdx, ct).ConfigureAwait(false);
+            ctx.Result = new ObjectResult(qr);
+            return true;
+        }
+
+        // 7. Album / Artist / Playlist children: GET /Items?ParentId={stub} or albumIds={stub}
         if (TryExtractStubAlbumQuery(http, out var parentGuid, out var pKind, out var pAlbum, out var pAlbumId))
         {
             var includeTypes = DoujinStyleSearchFilter.ExtractIncludeItemTypes(http);
             bool wantsAudio = includeTypes.Count == 0 || includeTypes.Contains("Audio");
             bool wantsAlbums = includeTypes.Count == 0 || includeTypes.Contains("MusicAlbum");
+
+            if (pKind == DoujinStubKind.Playlist && ushort.TryParse(pAlbumId, out var feedIndex))
+            {
+                var qr = await BuildPlaylistItemsQueryResultAsync(feedIndex, ct).ConfigureAwait(false);
+                ctx.Result = new ObjectResult(qr);
+                return true;
+            }
 
             if (pKind == DoujinStubKind.Album && !string.IsNullOrEmpty(pAlbumId))
             {
@@ -303,6 +322,12 @@ public sealed class DoujinStyleItemActionFilter : IAsyncActionFilter
         ushort trackIndex,
         CancellationToken ct)
     {
+        if (kind == DoujinStubKind.Playlist)
+        {
+            var feed = DoujinCatalogFeeds.GetByIndex(trackIndex);
+            return feed is not null ? DoujinCatalogFeeds.BuildPlaylistDto(feed) : null;
+        }
+
         if (kind == DoujinStubKind.Artist)
         {
             _stubCache.TryGetArtistName(guid, out var artistName);
@@ -333,6 +358,39 @@ public sealed class DoujinStyleItemActionFilter : IAsyncActionFilter
         }
 
         return null;
+    }
+
+    private async Task<QueryResult<BaseItemDto>> BuildPlaylistItemsQueryResultAsync(ushort feedIndex, CancellationToken ct)
+    {
+        var feed = DoujinCatalogFeeds.GetByIndex(feedIndex);
+        if (feed is null)
+        {
+            return new QueryResult<BaseItemDto>(0, 0, Array.Empty<BaseItemDto>());
+        }
+
+        try
+        {
+            var albums = await _doujinClient.BrowseAsync(feed.Key, 0, null, false, ct).ConfigureAwait(false);
+            var items = new List<BaseItemDto>(albums.Count);
+            int idx = 1;
+            foreach (var album in albums)
+            {
+                var job = _downloadQueue.GetJob(album.Id);
+                items.Add(DoujinDtoBuilder.BuildSingleTrackDto(
+                    album,
+                    0,
+                    $"{album.Title} — {album.Artist}",
+                    idx++,
+                    job));
+            }
+
+            return new QueryResult<BaseItemDto>(0, items.Count, items);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "[DoujinStyle] Could not load catalog feed {Feed}", feed.Key);
+            return new QueryResult<BaseItemDto>(0, 0, Array.Empty<BaseItemDto>());
+        }
     }
 
     private async Task<DoujinAlbum?> SafeLoadAlbumAsync(string albumId, DoujinAlbum? fallback, CancellationToken ct)

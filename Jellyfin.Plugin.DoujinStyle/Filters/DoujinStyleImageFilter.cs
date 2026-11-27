@@ -46,9 +46,23 @@ public sealed class DoujinStyleImageFilter : IAsyncActionFilter
             return;
         }
 
-        if (!_stubCache.TryGetByGuid(itemId, out var kind, out var album, out _, out var albumId)
-            || kind is not (DoujinStubKind.Album or DoujinStubKind.Track)
-            || string.IsNullOrEmpty(albumId))
+        if (!_stubCache.TryGetByGuid(itemId, out var kind, out var album, out var trackIdx, out var albumId))
+        {
+            await next().ConfigureAwait(false);
+            return;
+        }
+
+        if (kind == DoujinStubKind.Playlist)
+        {
+            var feed = DoujinCatalogFeeds.GetByIndex(trackIdx);
+            var plSvg = DoujinDtoBuilder.BuildFallbackSvgCover(
+                feed?.DisplayTitle.Replace("[DoujinStyle] ", string.Empty, StringComparison.Ordinal) ?? "Catalogue",
+                feed?.Subtitle ?? "DoujinStyle");
+            context.Result = new FileContentResult(plSvg, "image/svg+xml");
+            return;
+        }
+
+        if (kind is not (DoujinStubKind.Album or DoujinStubKind.Track) || string.IsNullOrEmpty(albumId))
         {
             await next().ConfigureAwait(false);
             return;

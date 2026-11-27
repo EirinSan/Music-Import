@@ -6,11 +6,12 @@ Plugin natif **Jellyfin 12.x (.NET 10)** permettant de **rechercher automatiquem
 
 ## Fonctionnalités
 
+- **Page « Catalogue DoujinStyle » intégrée au menu gauche de Jellyfin** : parcourez visuellement tous les albums **sans rien taper** grâce aux onglets *🆕 Nouveautés*, *🎲 Aléatoire (Relancer)*, *⛩️ Touhou Project*, *🎤 Vocaloid*, *⚡ Hardcore / J-Core*, *🌌 Trance*, *🏎️ Eurobeat*, *🎸 Rock / Metal*, *🎹 Piano / Jazz / Orchestral*, au filtre **💎 FLAC uniquement**, à la pagination et à la fiche détaillée + téléchargement en 1 clic !
+- **Listes de découverte dans Finamp / Symfonium / Mobile** : retrouve automatiquement les sélections `[DoujinStyle]` dans l'onglet **Playlists** de tes applications musicales mobiles sans taper de recherche.
 - **Recherche intégrée dans toutes vos apps Jellyfin** : tapez le nom d'un artiste, cercle ou album (ex: `FELT`, `ShibayanRecords`, `Camellia`, `IOSYS`...) dans Jellyfin, Finamp ou Symfonium — les albums correspondants de DoujinStyle apparaissent directement avec le préfixe `[DoujinStyle]` et leur pochette.
 - **Téléchargement en 1 geste depuis l'app** :
-  - Appuyez sur le **Cœur / Favori (♥)** sur un album ou une piste `[DoujinStyle]` (idéal sur Finamp, Symfonium et mobile), **ou**
-  - Appuyez sur **Lecture (▶)** (joue un court carillon de confirmation et lance le téléchargement en arrière-plan), **ou**
-  - Activez l'option *« Télécharger dès l'ouverture de la fiche album »* dans les réglages du plugin.
+  - Depuis le **Catalogue DoujinStyle** : cliquez directement sur **« ⬇ Télécharger »** sous n'importe quelle pochette, **ou**
+  - Dans Finamp / Symfonium / Jellyfin : appuyez sur le **Cœur / Favori (♥)** ou **Lecture (▶)** sur un album/titre `[DoujinStyle]`.
 - **Hébergeurs supportés nativement (100 % intégré au plugin, sans navigateur externe)** :
   - **MediaFire** (fichiers uniques `.rar`/`.zip`/`.7z` et dossiers partagés `/folder/`)
   - **Google Drive** (avec gestion automatique de la confirmation gros fichiers)
@@ -36,17 +37,19 @@ Plugin natif **Jellyfin 12.x (.NET 10)** permettant de **rechercher automatiquem
      `https://raw.githubusercontent.com/EirinSan/Music-Import/feat/doujinstyle-jellyfin-plugin/releases/manifest.json`
 3. Retournez dans **Catalogue** → rubrique **Music** → cliquez sur **DoujinStyle Importer** → **Installer**.
 4. Dans **Tableau de bord**, cliquez sur **Redémarrer** pour charger le plugin.
-5. Après redémarrage, ouvrez **Tableau de bord → Plugins → DoujinStyle Importer** : si vous n'avez pas encore de bibliothèque Musique, cliquez simplement sur le bouton **« Créer la médiathèque Musique en 1 clic »** (crée automatiquement `~/media/Music` et la médiathèque Jellyfin sans FTP ni SSH !).
+5. Après redémarrage :
+   - Cliquez sur **Catalogue DoujinStyle** directement dans le **menu latéral gauche de Jellyfin** pour parcourir tous les albums !
+   - Dans **Tableau de bord → Plugins → DoujinStyle Paramètres**, cliquez sur **« Créer la médiathèque Musique en 1 clic »** si vous n'avez pas encore de bibliothèque Musique.
 
 ---
 
-Le binaire compilé prêt à l'emploi se trouve aussi dans [`releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip`](releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip) si le dépôt reste privé :
+Le binaire compilé prêt à l'emploi se trouve aussi dans [`releases/Jellyfin.Plugin.DoujinStyle_1.1.0.0.zip`](releases/Jellyfin.Plugin.DoujinStyle_1.1.0.0.zip) si le dépôt reste privé :
 
 ### Méthode 1 — Sans terminal (SFTP / Filebrowser Ultra.cc)
-1. Téléchargez le fichier `releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip` depuis ce dépôt.
+1. Téléchargez le fichier `releases/Jellyfin.Plugin.DoujinStyle_1.1.0.0.zip` depuis ce dépôt.
 2. Connectez-vous en SFTP ou via **Filebrowser** sur votre slot Ultra.cc :
    - Créez le dossier `~/media/Music` s'il n'existe pas encore.
-   - Allez dans `~/.config/jellyfin/plugins/` (ou `~/.apps/jellyfin/plugins/` selon votre slot) et créez un dossier nommé **`DoujinStyle_1.0.0.0`**.
+   - Allez dans `~/.config/jellyfin/plugins/` (ou `~/.apps/jellyfin/plugins/` selon votre slot) et créez un dossier nommé **`DoujinStyle_1.1.0.0`**.
    - Décompressez le contenu du `.zip` (`Jellyfin.Plugin.DoujinStyle.dll`, `SharpCompress.dll`, `TagLibSharp.dll`, `HtmlAgilityPack.dll`, `ZstdSharp.dll`, `meta.json`) dans ce dossier `DoujinStyle_1.0.0.0`.
 3. Redémarrez Jellyfin depuis votre panneau **Ultra.cc Control Panel (UCP)** (ou en SSH via `app-jellyfin restart`).
 

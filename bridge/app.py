@@ -55,27 +55,7 @@ async def health() -> dict:
     return {"status": "ok", "upstream": DOUJINSTYLE_BASE}
 
 
-@app.get("/api/search")
-async def search(
-    q: str = Query(..., min_length=2),
-    only_flac: bool = Query(False),
-    x_bridge_key: Optional[str] = Header(default=None),
-) -> list[dict]:
-    verify_key(x_bridge_key)
-    params = {"p": "search", "source": "1", "type": "blanket", "result": q, "page": "0"}
-    if only_flac:
-        params["format0"] = "on"
-
-    async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True, timeout=20.0) as client:
-        resp = await client.get(f"{DOUJINSTYLE_BASE}/", params=params)
-        html = resp.text
-
-    if is_challenge_html(html):
-        raise HTTPException(
-            status_code=503,
-            detail="DoujinStyle returned an anti-bot challenge page to this bridge IP.",
-        )
-
+def parse_grid_html(html: str) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
     results: list[dict] = []
     seen_ids: set[str] = set()
@@ -142,6 +122,61 @@ async def search(
         )
 
     return results
+
+
+@app.get("/api/search")
+async def search(
+    q: str = Query(..., min_length=2),
+    only_flac: bool = Query(False),
+    x_bridge_key: Optional[str] = Header(default=None),
+) -> list[dict]:
+    verify_key(x_bridge_key)
+    params = {"p": "search", "source": "1", "type": "blanket", "result": q, "page": "0"}
+    if only_flac:
+        params["format0"] = "on"
+
+    async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True, timeout=20.0) as client:
+        resp = await client.get(f"{DOUJINSTYLE_BASE}/", params=params)
+        html = resp.text
+
+    if is_challenge_html(html):
+        raise HTTPException(
+            status_code=503,
+            detail="DoujinStyle returned an anti-bot challenge page to this bridge IP.",
+        )
+
+    return parse_grid_html(html)
+
+
+@app.get("/api/browse")
+async def browse(
+    category: str = Query("recent"),
+    page: int = Query(0, ge=0),
+    only_flac: bool = Query(False),
+    x_bridge_key: Optional[str] = Header(default=None),
+) -> list[dict]:
+    verify_key(x_bridge_key)
+    cat = category.strip()
+    if cat.lower() == "random":
+        url = f"{DOUJINSTYLE_BASE}/?p=random"
+    elif cat.lower() == "recent":
+        if only_flac:
+            url = f"{DOUJINSTYLE_BASE}/?p=search&source=1&type=blanket&result=&format0=on&page={page}"
+        else:
+            url = f"{DOUJINSTYLE_BASE}/" if page <= 0 else f"{DOUJINSTYLE_BASE}/?p=home&page={page}"
+    else:
+        url = f"{DOUJINSTYLE_BASE}/?p=search&source=1&type=blanket&result={cat}&page={page}"
+        if only_flac:
+            url += "&format0=on"
+
+    async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True, timeout=20.0) as client:
+        resp = await client.get(url)
+        html = resp.text
+
+    if is_challenge_html(html):
+        raise HTTPException(status_code=503, detail="DoujinStyle challenge detected.")
+
+    return parse_grid_html(html)
 
 
 @app.get("/api/album/{album_id}")

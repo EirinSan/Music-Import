@@ -107,6 +107,75 @@ public sealed class DoujinStyleController : ControllerBase
         }
     }
 
+    [HttpGet("Categories")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult<object> GetCategories()
+    {
+        return Ok(DoujinCatalogFeeds.All);
+    }
+
+    [HttpGet("Browse")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<object>> Browse(
+        [FromQuery] string category = "recent",
+        [FromQuery] int page = 0,
+        [FromQuery] bool? onlyFlac = null,
+        [FromQuery] bool refresh = false,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var items = await _doujinClient.BrowseAsync(category, page, onlyFlac, refresh, cancellationToken).ConfigureAwait(false);
+            return Ok(new
+            {
+                Success = true,
+                Category = category,
+                Page = Math.Max(0, page),
+                Items = items.Select(a => MapAlbumForCatalogUi(a)).ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new
+            {
+                Success = false,
+                Error = ex.Message,
+                Category = category,
+                Page = Math.Max(0, page),
+                Items = Array.Empty<object>()
+            });
+        }
+    }
+
+    [HttpGet("Album/{albumId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<object>> GetAlbumDetail([FromRoute] string albumId, CancellationToken cancellationToken)
+    {
+        var cleanId = ExtractIdFromInput(albumId);
+        try
+        {
+            var detail = await _doujinClient.GetAlbumDetailAsync(cleanId, cancellationToken).ConfigureAwait(false);
+            if (detail is null)
+            {
+                return NotFound(new { Success = false, Error = "Album introuvable sur DoujinStyle." });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Album = MapAlbumForCatalogUi(detail)
+            });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new
+            {
+                Success = false,
+                Error = ex.Message
+            });
+        }
+    }
+
     [HttpGet("Search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<object>> Search([FromQuery][Required] string query, CancellationToken cancellationToken)
@@ -117,7 +186,7 @@ public sealed class DoujinStyleController : ControllerBase
             return Ok(new
             {
                 Success = true,
-                Items = results
+                Items = results.Select(a => MapAlbumForCatalogUi(a)).ToList()
             });
         }
         catch (Exception ex)
@@ -126,7 +195,7 @@ public sealed class DoujinStyleController : ControllerBase
             {
                 Success = false,
                 Error = ex.Message,
-                Items = Array.Empty<DoujinAlbum>()
+                Items = Array.Empty<object>()
             });
         }
     }
@@ -146,6 +215,32 @@ public sealed class DoujinStyleController : ControllerBase
     public ActionResult<IReadOnlyList<DownloadJob>> GetJobs()
     {
         return Ok(_downloadQueue.GetAllJobs());
+    }
+
+    private object MapAlbumForCatalogUi(DoujinAlbum a)
+    {
+        var job = _downloadQueue.GetJob(a.Id);
+        return new
+        {
+            a.Id,
+            AlbumGuid = a.AlbumGuid.ToString("N"),
+            a.Title,
+            a.Artist,
+            a.CoverUrl,
+            a.PageUrl,
+            a.Format,
+            a.DateAdded,
+            a.Tags,
+            a.Tracks,
+            a.DetailsLoaded,
+            Job = job is null ? null : new
+            {
+                Status = job.Status.ToString(),
+                job.ProgressPercent,
+                job.StatusMessage,
+                job.ErrorMessage
+            }
+        };
     }
 
     private static string ExtractIdFromInput(string raw)

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${1:-1.0.0.0}"
+VERSION="${1:-1.1.0.0}"
 PLUGIN_GUID="91b47a12-5d3e-4c8f-a72e-681f0c4d9e21"
 BUILD_OUT="$ROOT_DIR/Jellyfin.Plugin.DoujinStyle/bin/Release/net10.0"
 DIST_DIR="$ROOT_DIR/releases"

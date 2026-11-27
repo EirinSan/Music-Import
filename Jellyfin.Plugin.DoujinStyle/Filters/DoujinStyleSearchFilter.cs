@@ -45,6 +45,10 @@ public sealed class DoujinStyleSearchFilter : IAsyncResultFilter
                 cts.CancelAfter(TimeSpan.FromSeconds(5));
                 await AugmentSearchResponseAsync(context, searchTerm, cts.Token).ConfigureAwait(false);
             }
+            else if (ShouldInjectBrowsePlaylists(context))
+            {
+                AugmentBrowsePlaylists(context);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -60,6 +64,61 @@ public sealed class DoujinStyleSearchFilter : IAsyncResultFilter
         }
 
         await next().ConfigureAwait(false);
+    }
+
+    private static bool ShouldInjectBrowsePlaylists(ResultExecutingContext ctx)
+    {
+        var cfg = Plugin.Instance?.Configuration;
+        if (cfg is null || !cfg.EnableBrowsePlaylists)
+        {
+            return false;
+        }
+
+        if (!HttpMethods.IsGet(ctx.HttpContext.Request.Method))
+        {
+            return false;
+        }
+
+        var q = ctx.HttpContext.Request.Query;
+        if (q.ContainsKey("searchTerm") || q.ContainsKey("SearchTerm"))
+        {
+            return false;
+        }
+
+        var includeTypes = ExtractIncludeItemTypes(ctx.HttpContext);
+        if (!includeTypes.Contains("Playlist"))
+        {
+            return false;
+        }
+
+        // Only inject on root playlist listings (not single-item or StartIndex > 0 pagination pages)
+        if (q.TryGetValue("StartIndex", out var si) && int.TryParse(si, out var idx) && idx > 0)
+        {
+            return false;
+        }
+
+        return ctx.Result is ObjectResult { Value: QueryResult<BaseItemDto> };
+    }
+
+    private static void AugmentBrowsePlaylists(ResultExecutingContext ctx)
+    {
+        if (ctx.Result is not ObjectResult { Value: QueryResult<BaseItemDto> qr })
+        {
+            return;
+        }
+
+        var existingIds = qr.Items.Select(i => i.Id).ToHashSet();
+        var playlistDtos = DoujinCatalogFeeds.All
+            .Select(DoujinCatalogFeeds.BuildPlaylistDto)
+            .Where(dto => existingIds.Add(dto.Id))
+            .ToList();
+
+        if (playlistDtos.Count > 0)
+        {
+            var combined = qr.Items.Concat(playlistDtos).ToArray();
+            qr.Items = combined;
+            qr.TotalRecordCount = Math.Max(qr.TotalRecordCount, combined.Length);
+        }
     }
 
     private static bool ShouldInjectSearch(ResultExecutingContext ctx, out string searchTerm)

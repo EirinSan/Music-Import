@@ -76,6 +76,51 @@ public sealed class DoujinStyleClient
         return albums.Take(maxResults).ToList();
     }
 
+    public async Task<IReadOnlyList<DoujinAlbum>> BrowseAsync(
+        string category,
+        int page,
+        bool? onlyFlacOverride,
+        bool forceRefresh,
+        CancellationToken cancellationToken)
+    {
+        var normCategory = string.IsNullOrWhiteSpace(category) ? "recent" : category.Trim();
+        var safePage = Math.Max(0, page);
+        var cfg = Plugin.Instance?.Configuration;
+        var onlyFlac = onlyFlacOverride ?? (cfg?.OnlyFlac ?? false);
+        bool isRandom = normCategory.Equals("random", StringComparison.OrdinalIgnoreCase);
+
+        var cacheKey = $"browse:{normCategory}|p={safePage}|flac={onlyFlac}";
+        if (!forceRefresh && !isRandom
+            && _searchCache.TryGetValue(cacheKey, out var cached)
+            && cached.ExpiresAt > DateTimeOffset.UtcNow)
+        {
+            return cached.Results;
+        }
+
+        List<DoujinAlbum> albums;
+        if (!string.IsNullOrWhiteSpace(cfg?.BridgeUrl))
+        {
+            albums = await BrowseViaBridgeAsync(cfg.BridgeUrl, cfg.BridgeApiKey, normCategory, safePage, onlyFlac, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            albums = await BrowseDirectAsync(GetBaseUrl(), normCategory, safePage, onlyFlac, cancellationToken).ConfigureAwait(false);
+        }
+
+        foreach (var album in albums)
+        {
+            _stubCache.PutAlbum(album);
+        }
+
+        if (!isRandom)
+        {
+            _searchCache[cacheKey] = new CachedSearch(albums, DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(3)));
+        }
+
+        LastWarning = null;
+        return albums;
+    }
+
     public async Task<DoujinAlbum?> GetAlbumDetailAsync(string albumId, CancellationToken cancellationToken)
     {
         if (_stubCache.TryGetByAlbumId(albumId, out var cached) && cached is { DetailsLoaded: true })
@@ -265,6 +310,68 @@ public sealed class DoujinStyleClient
     {
         var client = CreateBridgeClient(apiKey);
         var url = $"{bridgeUrl.TrimEnd('/')}/api/search?q={Uri.EscapeDataString(query)}&only_flac={(onlyFlac ? "true" : "false")}";
+        var list = await client.GetFromJsonAsync<List<DoujinAlbum>>(url, cancellationToken).ConfigureAwait(false);
+        return list ?? [];
+    }
+
+    private async Task<List<DoujinAlbum>> BrowseDirectAsync(string baseUrl, string category, int page, bool onlyFlac, CancellationToken cancellationToken)
+    {
+        string browseUrl;
+        if (category.Equals("random", StringComparison.OrdinalIgnoreCase))
+        {
+            browseUrl = $"{baseUrl}/?p=random";
+        }
+        else if (category.Equals("recent", StringComparison.OrdinalIgnoreCase))
+        {
+            if (onlyFlac)
+            {
+                browseUrl = $"{baseUrl}/?p=search&source=1&type=blanket&result=&format0=on&page={page}";
+            }
+            else
+            {
+                browseUrl = page <= 0 ? $"{baseUrl}/" : $"{baseUrl}/?p=home&page={page}";
+            }
+        }
+        else
+        {
+            browseUrl = $"{baseUrl}/?p=search&source=1&type=blanket&result={Uri.EscapeDataString(category)}&page={page}";
+            if (onlyFlac)
+            {
+                browseUrl += "&format0=on";
+            }
+        }
+
+        var client = CreateDirectClient();
+        using var resp = await client.GetAsync(browseUrl, cancellationToken).ConfigureAwait(false);
+        var html = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+        if (DoujinStyleHtmlParser.IsChallengePage(html))
+        {
+            RecordChallengeWarning();
+            throw new DoujinStyleChallengeException(
+                "DoujinStyle affiche une page de vérification anti-bot ('One moment, please...') pour l'IP de ce serveur.");
+        }
+
+        var parsed = DoujinStyleHtmlParser.ParseSearchResults(html, baseUrl);
+        if (parsed.Count == 0 && category.Equals("recent", StringComparison.OrdinalIgnoreCase) && page > 0 && !onlyFlac)
+        {
+            // Fallback pagination URL format on DoujinStyle
+            var altUrl = $"{baseUrl}/?p=search&source=1&type=blanket&result=&page={page}";
+            using var altResp = await client.GetAsync(altUrl, cancellationToken).ConfigureAwait(false);
+            var altHtml = await altResp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (!DoujinStyleHtmlParser.IsChallengePage(altHtml))
+            {
+                parsed = DoujinStyleHtmlParser.ParseSearchResults(altHtml, baseUrl);
+            }
+        }
+
+        return parsed;
+    }
+
+    private async Task<List<DoujinAlbum>> BrowseViaBridgeAsync(string bridgeUrl, string? apiKey, string category, int page, bool onlyFlac, CancellationToken cancellationToken)
+    {
+        var client = CreateBridgeClient(apiKey);
+        var url = $"{bridgeUrl.TrimEnd('/')}/api/browse?category={Uri.EscapeDataString(category)}&page={page}&only_flac={(onlyFlac ? "true" : "false")}";
         var list = await client.GetFromJsonAsync<List<DoujinAlbum>>(url, cancellationToken).ConfigureAwait(false);
         return list ?? [];
     }

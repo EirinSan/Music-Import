@@ -9,8 +9,11 @@
     <div data-role="content">
         <div class="content-primary">
             <div class="verticalSection">
-                <div class="sectionTitleContainer flex align-items-center">
-                    <h2 class="sectionTitle">DoujinStyle Importer</h2>
+                <div class="sectionTitleContainer flex align-items-center" style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                    <h2 class="sectionTitle" style="margin:0;">DoujinStyle Importer</h2>
+                    <a is="emby-linkbutton" class="raised button-submit" href="configurationpage?name=DoujinStyleCatalogue" style="padding:9px 16px; border-radius:6px; text-decoration:none;">
+                        <span>🎵 Ouvrir le Catalogue Visuel DoujinStyle</span>
+                    </a>
                 </div>
                 <p style="opacity:0.85;">
                     Recherche automatiquement des albums sur <strong>doujinstyle.com</strong> depuis vos applications Jellyfin (Web, Mobile, Finamp, Symfonium) et télécharge + extrait les archives directement dans votre médiathèque Musique.
@@ -28,7 +31,15 @@
 
             <form id="DoujinStyleConfigForm">
                 <div class="verticalSection">
-                    <h3 class="sectionTitle">Recherche &amp; Déclenchement</h3>
+                    <h3 class="sectionTitle">Catalogue, Recherche &amp; Déclenchement</h3>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="EnableBrowsePlaylists" type="checkbox" is="emby-checkbox" />
+                            <span>Afficher les listes de découverte DoujinStyle (Nouveautés, Aléatoire, Touhou, Vocaloid...) dans Playlists</span>
+                        </label>
+                        <div class="fieldDescription">Permet de parcourir les albums sans taper de nom même depuis Finamp, Symfonium et les apps mobiles (en plus de la page « Catalogue DoujinStyle » dans le menu gauche de Jellyfin).</div>
+                    </div>
 
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
@@ -244,6 +255,7 @@
             document.getElementById('DoujinStyleConfigPage').addEventListener('pageshow', function () {
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(pluginId).then(function (cfg) {
+                    document.getElementById('EnableBrowsePlaylists').checked = cfg.EnableBrowsePlaylists !== false;
                     document.getElementById('EnableSearchInjection').checked = cfg.EnableSearchInjection;
                     document.getElementById('MaxSearchResults').value = cfg.MaxSearchResults || 12;
                     document.getElementById('OnlyFlac').checked = cfg.OnlyFlac;
@@ -276,6 +288,7 @@
                 e.preventDefault();
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(pluginId).then(function (cfg) {
+                    cfg.EnableBrowsePlaylists = document.getElementById('EnableBrowsePlaylists').checked;
                     cfg.EnableSearchInjection = document.getElementById('EnableSearchInjection').checked;
                     cfg.MaxSearchResults = parseInt(document.getElementById('MaxSearchResults').value, 10) || 12;
                     cfg.OnlyFlac = document.getElementById('OnlyFlac').checked;

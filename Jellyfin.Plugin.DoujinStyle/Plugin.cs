@@ -37,7 +37,19 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         [
             new PluginPageInfo
             {
+                Name = "DoujinStyleCatalogue",
+                DisplayName = "Catalogue DoujinStyle",
+                EnableInMainMenu = true,
+                MenuIcon = "album",
+                EmbeddedResourcePath = string.Format(
+                    CultureInfo.InvariantCulture,
+                    "{0}.Configuration.catalogPage.html",
+                    GetType().Namespace)
+            },
+            new PluginPageInfo
+            {
                 Name = "DoujinStyleImporter",
+                DisplayName = "DoujinStyle Paramètres",
                 EmbeddedResourcePath = string.Format(
                     CultureInfo.InvariantCulture,
                     "{0}.Configuration.configPage.html",

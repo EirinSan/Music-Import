@@ -4,7 +4,7 @@ set -euo pipefail
 # Installateur automatique du plugin Jellyfin.Plugin.DoujinStyle pour Ultra.cc (usbx.me)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-ZIP_FILE="$ROOT_DIR/releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip"
+ZIP_FILE="$ROOT_DIR/releases/Jellyfin.Plugin.DoujinStyle_1.1.0.0.zip"
 
 if [[ ! -f "$ZIP_FILE" ]]; then
     echo "Erreur : Archive introuvable ($ZIP_FILE)."
@@ -39,14 +39,14 @@ if [[ $# -ge 1 && -n "${1:-}" ]]; then
     PLUGINS_DIR="$1"
 fi
 
-TARGET_PLUGIN_DIR="$PLUGINS_DIR/DoujinStyle_1.0.0.0"
+TARGET_PLUGIN_DIR="$PLUGINS_DIR/DoujinStyle_1.1.0.0"
 MUSIC_MEDIA_DIR="$HOME/media/Music"
 
 echo "==> Creation du dossier Musique ($MUSIC_MEDIA_DIR) si absent..."
 mkdir -p "$MUSIC_MEDIA_DIR"
 
 echo "==> Installation du plugin dans : $TARGET_PLUGIN_DIR"
-rm -rf "$TARGET_PLUGIN_DIR"
+rm -rf "$PLUGINS_DIR"/DoujinStyle_*
 mkdir -p "$TARGET_PLUGIN_DIR"
 
 python3 -m zipfile -e "$ZIP_FILE" "$TARGET_PLUGIN_DIR"

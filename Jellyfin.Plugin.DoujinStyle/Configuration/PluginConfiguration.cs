@@ -13,6 +13,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool EnableSearchInjection { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets a value indicating whether curated DoujinStyle catalog playlists (Nouveautés, Aléatoire, Touhou, Vocaloid...)
+    /// are injected into Jellyfin's Playlists view for browsing without typing a search query.
+    /// </summary>
+    public bool EnableBrowsePlaylists { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets the maximum number of DoujinStyle albums returned per search query.
     /// </summary>
     public int MaxSearchResults { get; set; } = 12;

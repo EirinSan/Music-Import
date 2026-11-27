@@ -33,6 +33,13 @@ public class DoujinStylePluginTests
         Assert.True(DoujinGuidCodec.TryDecode(artistGuid, out var arKind, out _, out _));
         Assert.Equal(DoujinStubKind.Artist, arKind);
 
+        var playlistGuid = DoujinGuidCodec.EncodePlaylist(3);
+        Assert.True(DoujinGuidCodec.TryDecode(playlistGuid, out var plKind, out var plId, out var plIdx));
+        Assert.Equal(DoujinStubKind.Playlist, plKind);
+        Assert.Equal("3", plId);
+        Assert.Equal(3, plIdx);
+        Assert.NotNull(DoujinCatalogFeeds.GetByIndex(3));
+
         Assert.False(DoujinGuidCodec.TryDecode(Guid.NewGuid(), out _, out _, out _));
     }
 

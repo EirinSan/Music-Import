@@ -8,12 +8,12 @@
     "category": "Music",
     "versions": [
       {
-        "version": "1.0.0.0",
+        "version": "1.1.0.0",
         "changelog": "Initial release for Jellyfin 12.x (.NET 10).",
         "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://raw.githubusercontent.com/EirinSan/Music-Import/feat/doujinstyle-jellyfin-plugin/releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip",
-        "checksum": "88150cadb218f8e6bfa16e1a109f1a20",
-        "timestamp": "2026-11-27T14:38:05Z"
+        "sourceUrl": "https://raw.githubusercontent.com/EirinSan/Music-Import/feat/doujinstyle-jellyfin-plugin/releases/Jellyfin.Plugin.DoujinStyle_1.1.0.0.zip",
+        "checksum": "e6f43ed4034e2111ea25a539b4ce46a3",
+        "timestamp": "2026-11-27T14:55:28Z"
       }
     ]
   }
