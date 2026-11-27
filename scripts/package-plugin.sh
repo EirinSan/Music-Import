@@ -62,7 +62,8 @@ rm -f "$ZIP_PATH"
 )
 
 MD5_HASH="$(md5sum "$ZIP_PATH" | awk '{print $1}')"
-DOWNLOAD_URL="${REPO_RELEASE_BASE_URL:-https://github.com/EirinSan/Music-Import/releases/latest/download}/${ZIP_NAME}"
+BRANCH_NAME="${MANIFEST_BRANCH:-feat/doujinstyle-jellyfin-plugin}"
+DOWNLOAD_URL="${REPO_RELEASE_BASE_URL:-https://raw.githubusercontent.com/EirinSan/Music-Import/${BRANCH_NAME}/releases}/${ZIP_NAME}"
 
 cat > "$DIST_DIR/manifest.json" <<EOF
 [

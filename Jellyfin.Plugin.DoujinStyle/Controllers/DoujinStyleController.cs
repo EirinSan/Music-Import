@@ -38,12 +38,38 @@ public sealed class DoujinStyleController : ControllerBase
     {
         var detectedLibraries = _downloadQueue.DetectMusicLibraryFolders();
         var effectiveDir = _downloadQueue.ResolveTargetMusicDirectory();
+        var suggestedDir = _downloadQueue.SuggestDefaultMusicDirectory();
         return Ok(new
         {
             DetectedMusicFolders = detectedLibraries,
             EffectiveTargetDirectory = effectiveDir,
+            SuggestedMusicDirectory = suggestedDir,
+            HasMusicLibrary = detectedLibraries.Count > 0,
             LastWarning = _doujinClient.LastWarning,
             Jobs = _downloadQueue.GetAllJobs()
+        });
+    }
+
+    [HttpPost("PrepareMusicFolder")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult<object> PrepareMusicFolder([FromQuery] string? path)
+    {
+        var targetPath = string.IsNullOrWhiteSpace(path)
+            ? _downloadQueue.SuggestDefaultMusicDirectory()
+            : path.Trim();
+
+        Directory.CreateDirectory(targetPath);
+
+        if (Plugin.Instance is not null && string.IsNullOrWhiteSpace(Plugin.Instance.Configuration.TargetMusicDirectory))
+        {
+            Plugin.Instance.Configuration.TargetMusicDirectory = targetPath;
+            Plugin.Instance.SaveConfiguration();
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Path = targetPath
         });
     }
 

@@ -16,8 +16,13 @@
                     Recherche automatiquement des albums sur <strong>doujinstyle.com</strong> depuis vos applications Jellyfin (Web, Mobile, Finamp, Symfonium) et télécharge + extrait les archives directement dans votre médiathèque Musique.
                 </p>
                 <div id="dsWarningBanner" style="display:none; padding:12px 16px; margin-bottom:16px; border-radius:6px; background:rgba(239,68,68,0.18); border:1px solid #ef4444; color:#fecaca;"></div>
-                <div id="dsDetectedFolderBanner" style="padding:10px 14px; margin-bottom:16px; border-radius:6px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4);">
-                    <strong>Dossier Musique actif :</strong> <span id="dsEffectiveFolder">Chargement...</span>
+                <div id="dsDetectedFolderBanner" style="padding:12px 16px; margin-bottom:16px; border-radius:6px; background:rgba(168,85,247,0.15); border:1px solid rgba(168,85,247,0.4); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div>
+                        <strong>Dossier Musique actif :</strong> <span id="dsEffectiveFolder">Chargement...</span>
+                    </div>
+                    <button is="emby-button" type="button" id="btnAutoCreateLibrary" class="raised button-submit" style="display:none; margin:0;">
+                        <span>Créer la médiathèque Musique en 1 clic</span>
+                    </button>
                 </div>
             </div>
 

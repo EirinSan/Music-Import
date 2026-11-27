@@ -101,6 +101,52 @@ public sealed class DownloadQueueService : BackgroundService
         return detected.Count > 0 ? detected[0] : null;
     }
 
+    public string SuggestDefaultMusicDirectory()
+    {
+        var existing = ResolveTargetMusicDirectory();
+        if (!string.IsNullOrWhiteSpace(existing))
+        {
+            return existing;
+        }
+
+        try
+        {
+            foreach (var vf in _libraryManager.GetVirtualFolders())
+            {
+                if (vf.Locations is not { Length: > 0 })
+                {
+                    continue;
+                }
+
+                foreach (var loc in vf.Locations)
+                {
+                    if (string.IsNullOrWhiteSpace(loc))
+                    {
+                        continue;
+                    }
+
+                    var parent = Directory.GetParent(loc.TrimEnd('/', '\\'))?.FullName;
+                    if (!string.IsNullOrWhiteSpace(parent))
+                    {
+                        return Path.Combine(parent, "Music");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "[DoujinStyle] Could not infer sibling media directory.");
+        }
+
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (!string.IsNullOrWhiteSpace(home))
+        {
+            return Path.Combine(home, "media", "Music");
+        }
+
+        return "/media/Music";
+    }
+
     public async Task<DownloadJob> EnqueueAlbumAsync(string albumId, DoujinAlbum? knownAlbum, Guid? triggerUserId, CancellationToken cancellationToken)
     {
         if (_jobs.TryGetValue(albumId, out var existing)

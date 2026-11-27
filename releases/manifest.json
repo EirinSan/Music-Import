@@ -11,9 +11,9 @@
         "version": "1.0.0.0",
         "changelog": "Initial release for Jellyfin 12.x (.NET 10).",
         "targetAbi": "12.0.0.0",
-        "sourceUrl": "https://github.com/EirinSan/Music-Import/releases/latest/download/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip",
-        "checksum": "f2aae2530cfbfba9d51f6363e42d56ef",
-        "timestamp": "2026-11-27T14:13:35Z"
+        "sourceUrl": "https://raw.githubusercontent.com/EirinSan/Music-Import/feat/doujinstyle-jellyfin-plugin/releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip",
+        "checksum": "88150cadb218f8e6bfa16e1a109f1a20",
+        "timestamp": "2026-11-27T14:38:05Z"
       }
     ]
   }

@@ -26,7 +26,21 @@ Plugin natif **Jellyfin 12.x (.NET 10)** permettant de **rechercher automatiquem
 
 ## Installation sur Ultra.cc (`usbx.me` — Jellyfin 12.2)
 
-Le binaire compilé prêt à l'emploi pour votre serveur Jellyfin `12.2.0` se trouve dans [`releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip`](releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip).
+### Méthode Recommandée — 100 % depuis la page web Jellyfin (0 FTP, 0 SSH)
+*(Nécessite que le dépôt GitHub hébergeant `manifest.json` soit en visibilité **Public** pour que Jellyfin puisse le télécharger.)*
+
+1. Ouvrez votre page Jellyfin (`https://ryo.hebe.usbx.me/jellyfin`) → **Tableau de bord → Plugins → Catalogue → ⚙️ (Dépôts / Repositories) → `+`**.
+2. Ajoutez le dépôt :
+   - **Nom du dépôt** : `DoujinStyle Importer`
+   - **URL du dépôt** :
+     `https://raw.githubusercontent.com/EirinSan/Music-Import/feat/doujinstyle-jellyfin-plugin/releases/manifest.json`
+3. Retournez dans **Catalogue** → rubrique **Music** → cliquez sur **DoujinStyle Importer** → **Installer**.
+4. Dans **Tableau de bord**, cliquez sur **Redémarrer** pour charger le plugin.
+5. Après redémarrage, ouvrez **Tableau de bord → Plugins → DoujinStyle Importer** : si vous n'avez pas encore de bibliothèque Musique, cliquez simplement sur le bouton **« Créer la médiathèque Musique en 1 clic »** (crée automatiquement `~/media/Music` et la médiathèque Jellyfin sans FTP ni SSH !).
+
+---
+
+Le binaire compilé prêt à l'emploi se trouve aussi dans [`releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip`](releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip) si le dépôt reste privé :
 
 ### Méthode 1 — Sans terminal (SFTP / Filebrowser Ultra.cc)
 1. Téléchargez le fichier `releases/Jellyfin.Plugin.DoujinStyle_1.0.0.0.zip` depuis ce dépôt.
